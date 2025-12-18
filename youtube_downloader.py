@@ -98,42 +98,44 @@ path_input = st.text_input("📂 مكان الحفظ:", value=os.path.join(os.ge
 
 # --- 5. التحميل ---
 st.write("") 
-# الزرار دلوقت هيظهر في النص بسبب الـ CSS المضاف فوق
 download_btn = st.button("🚀 ابدأ الآن")
 progress_bar_place = st.empty()
 
 if download_btn:
     if url_input and "p" in selected_quality:
-        progress_bar_place.markdown("<h4 style='color: #00c6ff; text-align: center;'>⏳ جاري التحميل الآن... برجاء الانتظار</h4>", unsafe_allow_html=True)
+        progress_bar_place.markdown("<h4 style='color: #00c6ff; text-align: center;'>⏳ جاري معالجة الفيديو... برجاء الانتظار</h4>", unsafe_allow_html=True)
         
         q_id = selected_quality.replace("p","")
+        # تعديل اسم الملف ليكون مؤقت وبسيط
+        temp_filename = "downloaded_video.mp4" if "فيديو" in format_type else "downloaded_audio.mp3"
+        
         ydl_opts = {
             'format': f'best[height<={q_id}][ext=mp4]/best' if "فيديو" in format_type else 'bestaudio/best',
-            'outtmpl': f'{path_input}/%(title)s.%(ext)s',
-            'progress_hooks': [progress_hook],
+            'outtmpl': temp_filename,  # الحفظ في الملف المؤقت
             'nocheckcertificate': True,
             'quiet': True,
-            'buffersize': 1024 * 1024 * 8,
-            'http_chunk_size': 10485760,
-            'concurrent_fragment_downloads': 10,
         }
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url_input])
-                st.session_state.history.append({
-                    "time": time.strftime("%H:%M"),
-                    "title": st.session_state.get('v_title', 'Video'),
-                    "q": selected_quality
-                })
-                st.balloons()
+            
+            # --- الخطوة الأهم: إرسال الملف للمستخدم ---
+            with open(temp_filename, "rb") as f:
+                st.download_button(
+                    label="✅ اضغط هنا لحفظ الملف على جهازك",
+                    data=f,
+                    file_name=f"{st.session_state.get('v_title', 'video')}.{'mp4' if 'فيديو' in format_type else 'mp3'}",
+                    mime="video/mp4" if "فيديو" in format_type else "audio/mpeg",
+                    use_container_width=True
+                )
+            st.balloons()
+            # مسح الملف من السيرفر بعد التحميل لتوفير المساحة
+            if os.path.exists(temp_filename):
+                os.remove(temp_filename)
+                
         except Exception as e:
             st.error(f"⚠️ فشل التحميل: {e}")
 
 # --- 6. السجل والوداع ---
-if st.session_state.history:
-    st.markdown("<h3 style='color: white; text-align: center;'>📜 سجل التنزيلات</h3>", unsafe_allow_html=True)
-    for item in reversed(st.session_state.history):
-        st.success(f"✅ **{item['time']}** | {item['title']} ({item['q']})")
-
 st.markdown('<div class="goodbye-msg">شكراً لاستخدامك El_kasrawy Downloader.. نتمنى لك يوماً سعيداً! ❤️</div>', unsafe_allow_html=True)
