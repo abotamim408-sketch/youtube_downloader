@@ -1,3 +1,4 @@
+
 import streamlit as st
 import yt_dlp
 import os
@@ -50,7 +51,7 @@ if url_input:
 
     if st.button("🚀 ابدأ الآن"):
         msg = st.empty()
-        msg.markdown("<h4 style='color: #00c6ff; text-align: center;'>⏳ جار التحميل ... برجاء الانتظار </h4>", unsafe_allow_html=True)
+        msg.markdown("<h4 style='color: #00c6ff; text-align: center;'>⏳ جاري المعالجة بأقصى سرعة...</h4>", unsafe_allow_html=True)
         
         ext = "mp4" if "فيديو" in format_type else "mp3"
         temp_name = f"video_{os.getpid()}.{ext}" # اسم فريد للملف
@@ -83,6 +84,4 @@ if url_input:
             st.error(f"حدث خطأ: {str(e)[:100]}")
 
 st.markdown('<div style="color: #666; text-align: center; margin-top: 50px;"> ❤️شكرا لاستخدامك موقعنا , نتمنى لك يوما سعيدا </div>', unsafe_allow_html=True)
-
-
 
