@@ -90,6 +90,7 @@ if st.button("🚀 ابدأ الآن"):
         except Exception as e:
             st.error(f"حدث خطأ: {e}")
 
-st.markdown('<div style="color: #666; text-align: center; margin-top: 50px;">El_شكرا لاستخدامك موقعنا ,نتمنى لك يوما سعيدا ❤️</div>', unsafe_allow_html=True)
+st.markdown('<div style="color: #666; text-align: center; margin-top: 50px;"> ❤️ شكرا لاستخدامك موقعنا ,نتمنى لك يوما سعيد </div>', unsafe_allow_html=True)
+
 
 
