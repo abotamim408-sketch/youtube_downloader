@@ -1,10 +1,9 @@
-
 import streamlit as st
 import yt_dlp
 import os
 
 # --- واجهتك الأصلية 100% ---
-st.set_page_config(page_title="YouTube Downloader", layout="centered")
+st.set_page_config(page_title="El_kasrawy Downloader", layout="centered")
 
 st.markdown("""
     <style>
@@ -83,5 +82,4 @@ if url_input:
         except Exception as e:
             st.error(f"حدث خطأ: {str(e)[:100]}")
 
-st.markdown('<div style="color: #666; text-align: center; margin-top: 50px;"> ❤️شكرا لاستخدامك موقعنا , نتمنى لك يوما سعيدا </div>', unsafe_allow_html=True)
-
+st.markdown('<div style="color: #666; text-align: center; margin-top: 50px;">El_kasrawy Downloader ❤️</div>', unsafe_allow_html=True)
