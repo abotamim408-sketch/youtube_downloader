@@ -3,7 +3,7 @@ import yt_dlp
 import os
 import time
 
-# --- 1. الإعدادات والتصميم ---
+# --- 1. الإعدادات والتصميم (نفس ستايلك اللي بتحبه) ---
 st.set_page_config(page_title="El_kasrawy Downloader", layout="centered")
 
 st.markdown("""
@@ -31,75 +31,76 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- 2. رسالة الترحيب ---
+# --- 2. الواجهة والترحيب ---
 st.markdown('<div class="logo-text">🌐 El_kasrawy </div>', unsafe_allow_html=True)
 st.markdown('<div class="glow-title">YouTube Downloader 🎬</div>', unsafe_allow_html=True)
 st.markdown('<div class="welcome-msg">مرحباً بك ❤️! جاهز لتحميل فيديوهاتك المفضلة؟ </div>', unsafe_allow_html=True)
 
-# --- 3. جلب بيانات الفيديو ---
 url_input = st.text_input("🔗 ضع رابط الفيديو هنا:", placeholder="https://youtube.com/...")
 
+# تهيئة المتغيرات
 available_qualities = []
-v_title = "video"
+video_title = "video"
 
 if url_input:
     try:
         with yt_dlp.YoutubeDL({'quiet': True, 'nocheckcertificate': True}) as ydl:
             info = ydl.extract_info(url_input, download=False)
-            v_title = info.get('title', 'video')
+            video_title = info.get('title', 'video')
             formats = info.get('formats', [])
-            # فلترة الجودات المدمجة الجاهزة
+            # فلترة الجودات اللي فيها فيديو وصوت عشان الـ ffmpeg
             heights = sorted(list(set(f['height'] for f in formats if f.get('height') and f.get('acodec') != 'none')), reverse=True)
             available_qualities = [f"{h}p" for h in heights]
             if not available_qualities: available_qualities = ["أفضل جودة متاحة"]
     except:
         available_qualities = ["رابط غير صحيح"]
 
-# --- 4. الاختيارات ---
+# --- 3. الخيارات ---
 c1, c2 = st.columns(2)
 with c1:
     format_type = st.selectbox("📦 نوع الملف:", ["فيديو (MP4)", "صوت (MP3)"])
 with c2:
     selected_quality = st.selectbox("🎬 الجودة المتاحة:", available_qualities if url_input else ["أدخل الرابط أولاً"])
 
-# --- 5. عملية التحميل ---
+# --- 4. التحميل (الحل النهائي للإيرور) ---
 if st.button("🚀 ابدأ الآن"):
     if not url_input or "أدخل" in selected_quality:
-        st.warning("برجاء إدخال رابط صحيح")
+        st.warning("رجاءً ضع رابطاً صحيحاً")
     else:
-        with st.spinner("⏳ جاري التحميل... برجاء الانتظار"):
-            ext = "mp4" if "فيديو" in format_type else "mp3"
-            # تنظيف عنوان الفيديو من أي رموز غريبة قد تسبب خطأ
-            clean_title = "".join([c for c in v_title if c.isalnum() or c in (' ', '.', '_')]).rstrip()
-            final_filename = f"{clean_title}.{ext}"
+        with st.spinner("⏳ جاري التحميل... ثواني وهيكون عندك"):
+            # استخدام اسم ثابت وبسيط للسيرفر لتجنب أي مشاكل في المسميات العربية أو الطويلة
+            temp_file = "file_to_download.mp4" if "فيديو" in format_type else "file_to_download.mp3"
+            
+            # مسح أي نسخة قديمة موجودة
+            if os.path.exists(temp_file): os.remove(temp_file)
             
             q_id = selected_quality.replace("p","")
             ydl_opts = {
-                'format': f'best[height<={q_id}][ext=mp4]/best' if ext == "mp4" else 'bestaudio/best',
-                'outtmpl': final_filename,
+                # اختيار جودة مدمجة صوتاً وصورة لتجاوز مشاكل ffmpeg
+                'format': f'best[height<={q_id}][ext=mp4]/best' if "فيديو" in format_type else 'bestaudio/best',
+                'outtmpl': temp_file,
                 'nocheckcertificate': True,
+                'quiet': True,
             }
 
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     ydl.download([url_input])
                 
-                if os.path.exists(final_filename):
-                    with open(final_filename, "rb") as f:
+                # التأكد من أن الملف تم كتابته بالكامل وله حجم
+                if os.path.exists(temp_file) and os.path.getsize(temp_file) > 0:
+                    with open(temp_file, "rb") as f:
                         st.download_button(
                             label="✅ اضغط هنا لحفظ الملف على جهازك",
                             data=f,
-                            file_name=final_filename,
-                            mime="video/mp4" if ext == "mp4" else "audio/mpeg",
+                            file_name=f"{video_title}.{'mp4' if 'فيديو' in format_type else 'mp3'}",
+                            mime="video/mp4" if "فيديو" in format_type else "audio/mpeg",
                             use_container_width=True
                         )
                     st.balloons()
-                    # حذف الملف من السيرفر فوراً لضمان عدم حدوث تداخل مستقبلاً
-                    os.remove(final_filename)
                 else:
-                    st.error("عذراً، حدث خطأ في إنشاء الملف. حاول مرة أخرى.")
+                    st.error("❌ السيرفر لم يستطع معالجة الملف، جرب جودة أخرى أو رابط آخر.")
             except Exception as e:
                 st.error(f"⚠️ فشل التحميل: {e}")
 
-# --- 6. رسالة الوداع ---
 st.markdown('<div class="goodbye-msg">شكراً لاستخدامك El_kasrawy Downloader.. نتمنى لك يوماً سعيداً! ❤️</div>', unsafe_allow_html=True)
