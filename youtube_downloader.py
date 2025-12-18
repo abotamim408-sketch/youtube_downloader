@@ -3,7 +3,7 @@ import yt_dlp
 import os
 
 # --- واجهتك الأصلية 100% ---
-st.set_page_config(page_title="El_kasrawy Downloader", layout="centered")
+st.set_page_config(page_title="YouTube Downloader", layout="centered")
 
 st.markdown("""
     <style>
@@ -91,3 +91,4 @@ if st.button("🚀 ابدأ الآن"):
             st.error(f"حدث خطأ: {e}")
 
 st.markdown('<div style="color: #666; text-align: center; margin-top: 50px;">El_kasrawy Downloader ❤️</div>', unsafe_allow_html=True)
+
