@@ -20,10 +20,8 @@ st.markdown('<div class="logo-text">🌐 El_kasrawy </div>', unsafe_allow_html=T
 st.markdown('<div class="glow-title">YouTube Downloader 🎬</div>', unsafe_allow_html=True)
 st.markdown('<div class="welcome-msg">مرحباً بك ❤️ جاهز لتحميل فيديوهاتك المفضلة؟</div>', unsafe_allow_html=True)
 
-# --- كود الكوكيز (الزيادة الوحيدة تحت الحساب) ---
 cookie_path = "cookies.txt" if os.path.exists("cookies.txt") else None
 
-# --- الحقول والواجهة ---
 url_input = st.text_input("🔗 ضع رابط الفيديو هنا:", placeholder="https://youtube.com/...")
 
 if "available_qs" not in st.session_state:
@@ -46,47 +44,50 @@ if url_input:
         st.session_state.available_qs = ["رابط غير صحيح"]
 
 c1, c2 = st.columns(2)
-with c1:
-    format_type = st.selectbox("📦 نوع الملف:", ["فيديو (MP4)", "صوت (MP3)"])
-with c2:
-    selected_quality = st.selectbox("🎬 الجودة المتاحة:", st.session_state.available_qs)
+with c1: format_type = st.selectbox("📦 نوع الملف:", ["فيديو (MP4)", "صوت (MP3)"])
+with c2: selected_quality = st.selectbox("🎬 الجودة المتاحة:", st.session_state.available_qs)
 
-# --- زر التحميل ---
 if st.button("🚀 ابدأ الآن"):
     if url_input:
         msg = st.empty()
-        msg.markdown("<h4 style='color: #00c6ff; text-align: center;'>⏳ جاري معالجة الفيديو... برجاء الانتظار</h4>", unsafe_allow_html=True)
+        msg.markdown("<h4 style='color: #00c6ff; text-align: center;'>⏳ جاري المعالجة بأقصى سرعة...</h4>", unsafe_allow_html=True)
         
         ext = "mp4" if "فيديو" in format_type else "mp3"
-        temp_name = f"final_result.{ext}"
+        temp_name = f"final_download.{ext}"
         
         q_id = selected_quality.replace("p","")
+        
+        # --- تعديلات السرعة الفائقة ---
         ydl_opts_dl = {
             'format': f'bestvideo[height<={q_id}][ext=mp4]+bestaudio[ext=m4a]/best[height<={q_id}]',
             'outtmpl': temp_name,
             'cookiefile': cookie_path,
-            'nocheckcertificate': True
+            'nocheckcertificate': True,
+            'external_downloader': 'aria2c', # استخدام محرك تحميل خارجي لو متاح
+            'external_downloader_args': ['-x', '16', '-s', '16', '-k', '1M'], # فتح 16 قناة تحميل في وقت واحد
+            'buffersize': 1024*1024, # زيادة حجم البافر لتسريع النقل
+            'retries': 10,
+            'fragment_retries': 10,
         }
         
         try:
             with yt_dlp.YoutubeDL(ydl_opts_dl) as ydl:
                 ydl.download([url_input])
             
-            if os.path.exists(temp_name) and os.path.getsize(temp_name) > 0:
+            if os.path.exists(temp_name):
                 with open(temp_name, "rb") as f:
                     st.download_button(
-                        label="✅ اضغط هنا لحفظ الملف على جهازك",
+                        label="📥 اضغط هنا لحفظ الملف فوراً",
                         data=f,
                         file_name=f"{st.session_state.v_title}.{ext}",
                         mime=f"video/{ext}" if ext=="mp4" else "audio/mpeg",
                         use_container_width=True
                     )
+                st.success("✅ تم التجهيز بنجاح!")
                 st.balloons()
                 msg.empty()
                 os.remove(temp_name)
-            else:
-                st.error("ERROR: الملف فارغ، يرجى تحديث الكوكيز.")
         except Exception as e:
-            st.error(f"حدث خطأ: {str(e)[:100]}")
+            st.error(f"حدث خطأ: {e}")
 
-st.markdown('<div style="color: #666; text-align: center; margin-top: 50px;">نتمنى لك يوماً سعيداً.. El_kasrawy Downloader شكراً لاستخدامك سعيداً ❤️</div>', unsafe_allow_html=True)
+st.markdown('<div style="color: #666; text-align: center; margin-top: 50px;">El_kasrawy Downloader ❤️</div>', unsafe_allow_html=True)
