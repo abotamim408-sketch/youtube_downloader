@@ -29,8 +29,6 @@ st.markdown("""
     }
     
     .history-card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 5px; border-right: 4px solid #00c6ff; }
-    /* تنسيق خاص لجعل السجل يظهر بوضوح في الجنب */
-    [data-testid="stSidebar"] { background-color: #0e1117; border-right: 1px solid #00c6ff22; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -69,6 +67,7 @@ if search_btn and url_input:
     except Exception as e:
         st.error(f"❌ خطأ: تأكد من رفع ملف cookies.txt | {e}")
 
+# --- تم تعديل العرض هنا ليكون كامل العرض ---
 main_col = st.container()
 
 with main_col:
@@ -117,8 +116,8 @@ with main_col:
                     ydl.download([url_input])
                 
                 if os.path.exists(out_file):
-                    # إضافة للسجل عند النجاح
-                    st.session_state.history.append({"title": st.session_state.video_data['title'], "time": time.strftime("%H:%M")})
+                    # إضافة الفيديو للسجل عند النجاح
+                    st.session_state.history.append({"title": st.session_state.video_data['title']})
                     
                     status_text.text("✅ تمت المعالجة! اضغط على الزر الأزرق")
                     with open(out_file, "rb") as f:
@@ -132,26 +131,14 @@ with main_col:
             except Exception as e:
                 st.error(f"❌ خطأ: {e}")
 
-# --- السجل في القائمة الجانبية (Sidebar) مع التوضيح للمستخدم ---
+# --- التعديل السحري هنا: السجل في القائمة الجانبية (Sidebar) ---
 with st.sidebar:
-    st.markdown("## 📜 سجل التحميلات")
-    st.write("الفيديوهات التي حملتها مؤخراً تظهر هنا:")
-    
+    st.markdown("### 📜 السجل")
     if st.button("🗑️ مسح السجل"):
         st.session_state.history = []
         st.rerun()
     
-    st.write("---")
-    
-    if not st.session_state.history:
-        st.info("السجل فارغ حالياً")
-    else:
-        for item in reversed(st.session_state.history):
-            st.markdown(f'''
-            <div class="history-card">
-                <small style="color: #00c6ff;">{item['time']}</small><br>
-                <b>{item['title'][:40]}...</b>
-            </div>
-            ''', unsafe_allow_html=True)
+    for item in reversed(st.session_state.history):
+        st.markdown(f'<div class="history-card"><b>{item["title"][:30]}</b></div>', unsafe_allow_html=True)
 
 st.markdown("<br><center>El_kasrawy Pro 2025</center>", unsafe_allow_html=True)
