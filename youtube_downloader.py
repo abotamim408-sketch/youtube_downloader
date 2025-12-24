@@ -2,135 +2,97 @@ import streamlit as st
 import yt_dlp
 import os
 import time
-import uuid
 import re
 
-# --- الإعدادات والواجهة ---
-st.set_page_config(page_title="YouTube Downloader", layout="wide")
+# --- 1. إعدادات الصفحة وتفعيل السجل في ذاكرة المتصفح ---
+st.set_page_config(page_title="El_kasrawy Downloader", layout="wide")
 
+if 'history' not in st.session_state:
+    st.session_state.history = []
+
+# --- 2. تنسيق الألوان (حل مشكلة الزر الأبيض) ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0e14; color: white; }
-    .logo-text { color: #00c6ff; font-size: 22px; font-weight: bold; }
-    .glow-title { font-size: 40px; font-weight: 900; color: #FFFFFF; text-align: center; }
-    
-    div.stButton > button {
-        background-color: transparent; color: #00c6ff; border: 2px solid #00c6ff;
-        border-radius: 10px; font-weight: bold; width: 100%; height: 3.5em;
-    }
-    div.stButton > button:hover { background-color: #00c6ff; color: white; }
-    
     div.stDownloadButton > button {
-        background-color: #00c6ff !important; 
-        color: white !important; 
-        border: none !important;
-        border-radius: 10px; font-weight: bold; width: 100%; height: 3.5em;
-        font-size: 18px;
+        background-color: #00c6ff !important;
+        color: white !important;
+        font-weight: bold;
+        border-radius: 10px;
+        width: 100%;
+        height: 3.5em;
     }
-    
-    .history-card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 5px; border-right: 4px solid #00c6ff; }
+    .history-card {
+        background: rgba(255,255,255,0.05);
+        padding: 10px;
+        border-radius: 10px;
+        margin-bottom: 5px;
+        border-right: 4px solid #00c6ff;
+    }
     </style>
     """, unsafe_allow_html=True)
 
-if 'history' not in st.session_state: st.session_state.history = []
-if 'video_data' not in st.session_state:
-    st.session_state.video_data = {'title': "ابحث عن فيديو", 'thumb': "https://via.placeholder.com/400x225/111/333", 'qs': ["أفضل جودة"]}
+st.title("🎬 YouTube Downloader Pro")
+url = st.text_input("انسخ رابط الفيديو هنا:", placeholder="https://youtube.com/...")
 
-st.markdown('<div class="logo-text">🌐 El_kasrawy </div>', unsafe_allow_html=True)
-st.markdown('<div class="glow-title">YouTube Downloader 🎬</div>', unsafe_allow_html=True)
-
-col_input, col_search = st.columns([4, 1])
-with col_input:
-    url_input = st.text_input("YouTube URL", placeholder="ضع رابط الفيديو هنا...", key="url_bar", label_visibility="collapsed")
-with col_search:
-    search_btn = st.button("🔍 بحث")
-
-# --- محرك البحث باستخدام الكوكيز ---
-if search_btn and url_input:
-    try:
-        with st.spinner("🔄 جاري فحص الجودات بالهوية الجديدة..."):
-            ydl_opts = {
-                'quiet': True, 
-                'nocheckcertificate': True,
-                'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            }
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url_input, download=False)
-                formats = info.get('formats', [])
-                heights = sorted(list(set(f['height'] for f in formats if f.get('height'))), reverse=True)
-                st.session_state.video_data = {
-                    'title': info.get('title', 'Video'),
-                    'thumb': info.get('thumbnail'),
-                    'qs': [f"{h}p" for h in heights] if heights else ["أفضل جودة"]
-                }
-    except Exception as e:
-        st.error(f"❌ خطأ: تأكد من رفع ملف cookies.txt | {e}")
-
-main_col, side_col = st.columns([2, 1])
-
-with main_col:
-    st.markdown("### 📥 إعدادات التحميل")
-    col_m1, col_m2 = st.columns([1, 1.2])
-    with col_m1:
-        st.image(st.session_state.video_data['thumb'], width='stretch')
-    with col_m2:
-        st.write(f"**{st.session_state.video_data['title']}**")
-        format_choice = st.selectbox("النوع:", ["فيديو (MP4)", "صوت (MP3)"])
-        quality_choice = st.selectbox("الجودة:", st.session_state.video_data['qs'])
-
-    progress_bar = st.progress(0)
-    status_text = st.empty()
-
-    def progress_hook(d):
-        if d['status'] == 'downloading':
-            p = d.get('_percent_str', '0%').replace('%','')
-            try:
-                progress_bar.progress(float(p)/100)
-                status_text.text(f"🚀 جاري التحميل: {d.get('_percent_str')}")
-            except: pass
-
-    if st.button("🚀 ابدأ المعالجة"):
-        if url_input:
-            is_mp3 = "صوت" in format_choice
-            ext = "mp3" if is_mp3 else "mp4"
-            unique_id = uuid.uuid4().hex
-            out_file = f"{unique_id}.{ext}"
-            q_num = quality_choice.replace("p", "")
+# --- 3. محرك التحميل ---
+if st.button("🚀 ابدأ معالجة الفيديو"):
+    if url:
+        with st.spinner("جاري التحميل..."):
+            # تنظيف اسم الفيديو من الرموز الغريبة
+            out_file = "video_download.mp4"
             
             ydl_opts = {
-                'format': f'bestvideo[height<={q_num}]+bestaudio/best' if not is_mp3 else 'bestaudio/best',
+                'format': 'best',
+                'cookiefile': 'cookies.txt', # التأكد من رفع ملف الكوكيز
                 'outtmpl': out_file,
-                'merge_output_format': 'mp4' if not is_mp3 else None,
-                'progress_hooks': [progress_hook],
                 'nocheckcertificate': True,
-                # استخدام الكوكيز هنا أيضاً
-                'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
             }
-            if is_mp3:
-                ydl_opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': '192'}]
-
+            
             try:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    ydl.download([url_input])
+                    info = ydl.extract_info(url, download=True)
+                    video_title = info.get('title', 'Video')
                 
                 if os.path.exists(out_file):
-                    status_text.text("✅ تمت المعالجة! اضغط على الزر الأزرق")
-                    with open(out_file, "rb") as f:
+                    st.success("✅ تمت المعالجة!")
+                    
+                    # --- إضافة الفيديو للسجل هنا ---
+                    st.session_state.history.append({
+                        "title": video_title,
+                        "time": time.strftime("%H:%M:%S")
+                    })
+                    
+                    with open(out_file, "rb") as file:
                         st.download_button(
-                            label="📥 حفظ الملف الآن",
-                            data=f,
-                            file_name=f"video_{unique_id}.{ext}",
-                            mime="video/mp4" if not is_mp3 else "audio/mpeg"
+                            label="📥 اضغط هنا لتحميل الملف",
+                            data=file,
+                            file_name=f"{video_title}.mp4",
+                            mime="video/mp4"
                         )
-                else: st.error("❌ فشل التحميل")
             except Exception as e:
+                # عرض الخطأ إذا فشل (مثل 403 Forbidden)
                 st.error(f"❌ خطأ: {e}")
+    else:
+        st.warning("⚠️ ضع الرابط أولاً")
 
-with side_col:
-    st.markdown("### 📜 السجل")
-    for item in reversed(st.session_state.history):
-        st.markdown(f'<div class="history-card"><b>{item["title"][:30]}</b></div>', unsafe_allow_html=True)
+# --- 4. عرض السجل في القائمة الجانبية (Sidebar) ---
+with st.sidebar:
+    st.markdown("### 📜 سجل التحميلات")
+    if not st.session_state.history:
+        st.write("لا يوجد تحميلات بعد")
+    else:
+        if st.button("🗑️ مسح السجل"):
+            st.session_state.history = []
+            st.rerun()
+        
+        for item in reversed(st.session_state.history):
+            st.markdown(f"""
+            <div class="history-card">
+                <small style="color:#00c6ff;">{item['time']}</small><br>
+                <b>{item['title'][:40]}...</b>
+            </div>
+            """, unsafe_allow_html=True)
 
-st.markdown("<br><center>El_kasrawy Pro 2025</center>", unsafe_allow_html=True)
+st.markdown("<br><center style='color:#444;'>El_kasrawy 2025</center>", unsafe_allow_html=True)
