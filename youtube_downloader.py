@@ -1,86 +1,154 @@
 import streamlit as st
 import yt_dlp
 import os
+import time
+import shutil  # لنقل الملفات تلقائياً
+import uuid    # لإنشاء أسماء ملفات مؤقتة فريدة
+import re
 
-# --- واجهتك الأصلية 100% ---
-st.set_page_config(page_title="YouTube Downloader", layout="centered")
+# --- الإعدادات والواجهة ---
+st.set_page_config(page_title="YouTube Downloader", layout="wide")
 
 st.markdown("""
     <style>
-    .stApp { background: radial-gradient(circle, #1a1a1a 0%, #000000 100%); }
-    .logo-text { color: #00c6ff; font-size: 22px; font-weight: bold; text-align: left; }
-    .glow-title { font-size: 50px; font-weight: 900; color: #FFFFFF; text-align: center; text-shadow: 0 0 15px rgba(0, 198, 255, 0.9); }
-    .welcome-msg { color: #00c6ff; font-size: 19px; text-align: center; margin-bottom: 30px; }
-    div.stButton > button { width: 100%; border-radius: 50px; border: 2px solid #00c6ff; background: transparent; color: white; font-size: 20px; font-weight: bold; }
-    div.stButton > button:hover { background: #00c6ff; color: black; box-shadow: 0 0 20px #00c6ff; }
+    .stApp { background-color: #0b0e14; color: white; }
+    .logo-text { color: #00c6ff; font-size: 22px; font-weight: bold; }
+    .glow-title { font-size: 40px; font-weight: 900; color: #FFFFFF; text-align: center; }
+    div.stButton > button {
+        background-color: transparent; color: #00c6ff; border: 2px solid #00c6ff;
+        border-radius: 10px; font-weight: bold; width: 100%; height: 3.5em;
+    }
+    div.stButton > button:hover { background-color: #00c6ff; color: white; }
+    .history-card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 5px; border-right: 4px solid #00c6ff; }
     </style>
     """, unsafe_allow_html=True)
 
+# تهيئة السجل وحالة الفيديو
+if 'history' not in st.session_state: st.session_state.history = []
+if 'video_data' not in st.session_state:
+    st.session_state.video_data = {'title': "ابحث عن فيديو", 'thumb': "https://via.placeholder.com/400x225/111/333", 'qs': ["أفضل جودة"]}
+
+# --- الهيدر ---
 st.markdown('<div class="logo-text">🌐 El_kasrawy </div>', unsafe_allow_html=True)
-st.markdown('<div class="glow-title">YouTube Downloader 🎬</div>', unsafe_allow_html=True)
-st.markdown('<div class="welcome-msg">مرحباً بك ❤️ جاهز لتحميل فيديوهاتك المفضلة؟</div>', unsafe_allow_html=True)
+st.markdown('<div class="glow-title">YouTube Downloader  🎬</div>', unsafe_allow_html=True)
 
-# التأكد من مسار الكوكيز بدقة
-cookie_path = os.path.join(os.getcwd(), "cookies.txt")
-cookie_exists = os.path.exists(cookie_path)
+# --- 1. منطقة البحث ---
+col_input, col_search = st.columns([4, 1])
+with col_input:
+    url_input = st.text_input("", placeholder="ضع رابط الفيديو هنا...", key="url_bar", label_visibility="collapsed")
+with col_search:
+    search_btn = st.button("🔍 بحث")
 
-url_input = st.text_input("🔗 ضع رابط الفيديو هنا:", placeholder="https://youtube.com/...")
-
-if url_input:
+if search_btn and url_input:
     try:
-        ydl_opts_info = {
-            'quiet': True,
-            'cookiefile': cookie_path if cookie_exists else None,
-            'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'nocheckcertificate': True,
-        }
-        with yt_dlp.YoutubeDL(ydl_opts_info) as ydl:
-            info = ydl.extract_info(url_input, download=False)
-            formats = info.get('formats', [])
-            heights = sorted(list(set(f['height'] for f in formats if f.get('height') and f.get('acodec') != 'none')), reverse=True)
-            available_qs = [f"{h}p" for h in heights] if heights else ["أفضل جودة متاحة"]
-            st.session_state.v_title = info.get('title', 'video')
-            st.session_state.qs = available_qs
+        with st.spinner("🔄 جاري فحص الجودات..."):
+            ydl_opts = {'quiet': True, 'nocheckcertificate': True}
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url_input, download=False)
+                formats = info.get('formats', [])
+                heights = sorted(list(set(f['height'] for f in formats if f.get('height'))), reverse=True)
+                st.session_state.video_data = {
+                    'title': info.get('title', 'Video'),
+                    'thumb': info.get('thumbnail'),
+                    'qs': [f"{h}p" for h in heights] if heights else ["أفضل جودة"]
+                }
     except Exception as e:
-        st.session_state.qs = ["رابط غير صحيح أو محمي"]
+        st.error(f"❌ خطأ: {e}")
 
-    c1, c2 = st.columns(2)
-    with c1: format_type = st.selectbox("📦 نوع الملف:", ["فيديو (MP4)", "صوت (MP3)"])
-    with c2: selected_quality = st.selectbox("🎬 الجودة المتاحة:", st.session_state.get('qs', ["انتظر..."]))
+# --- تقسيم الشاشة ---
+main_col, side_col = st.columns([2, 1])
 
-    if st.button("🚀 ابدأ الآن"):
-        msg = st.empty()
-        msg.markdown("<h4 style='color: #00c6ff; text-align: center;'>⏳ جاري المعالجة بأقصى سرعة...</h4>", unsafe_allow_html=True)
-        
-        ext = "mp4" if "فيديو" in format_type else "mp3"
-        temp_name = f"video_{os.getpid()}.{ext}" # اسم فريد للملف
-        
-        q_id = selected_quality.replace("p","")
-        ydl_opts_dl = {
-            'format': f'bestvideo[height<={q_id}][ext=mp4]+bestaudio[ext=m4a]/best[height<={q_id}]',
-            'outtmpl': temp_name,
-            'cookiefile': cookie_path if cookie_exists else None,
-            'nocheckcertificate': True,
-            'http_headers': {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            }
-        }
-        
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts_dl) as ydl:
-                ydl.download([url_input])
+with main_col:
+    st.markdown("### 📥 إعدادات التحميل")
+    col_m1, col_m2 = st.columns([1, 1.2])
+    with col_m1:
+        st.image(st.session_state.video_data['thumb'], use_container_width=True)
+    with col_m2:
+        st.write(f"**{st.session_state.video_data['title']}**")
+        format_choice = st.selectbox("النوع:", ["فيديو (MP4)", "صوت (MP3)"])
+        quality_choice = st.selectbox("الجودة:", st.session_state.video_data['qs'])
+
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+
+    def progress_hook(d):
+        if d['status'] == 'downloading':
+            p = d.get('_percent_str', '0%').replace('%','')
+            try:
+                progress_bar.progress(float(p)/100)
+                status_text.text(f"🚀 جاري التحميل: {d.get('_percent_str')} | السرعة: {d.get('_speed_str')}")
+            except: pass
+        if d['status'] == 'finished':
+            status_text.text("✅ اكتمل التحميل، يتم الحفظ التلقائي الآن...")
+
+    if st.button("🚀 ابدأ التحميل الآن"):
+        if url_input:
+            is_mp3 = "صوت" in format_choice
+            ext = "mp3" if is_mp3 else "mp4"
             
-            if os.path.exists(temp_name) and os.path.getsize(temp_name) > 0:
-                with open(temp_name, "rb") as f:
-                    st.download_button("📥 اضغط هنا لحفظ الملف فوراً", f, file_name=f"{st.session_state.v_title}.{ext}", use_container_width=True)
-                st.success("✅ تم التجهيز!")
-                st.balloons()
-                msg.empty()
-                os.remove(temp_name)
+            # مجلد مؤقت للتحميل
+            temp_dir = "temp_dl"
+            if not os.path.exists(temp_dir): os.makedirs(temp_dir)
+            
+            # تنظيف اسم الملف
+            safe_title = re.sub(r'[\\/*?:"<>|]', "", st.session_state.video_data['title'])
+            unique_name = f"dl_{uuid.uuid4().hex}"
+            temp_out_path = os.path.join(temp_dir, f"{unique_name}.%(ext)s")
+            
+            q_num = quality_choice.replace("p", "")
+            
+            # إعدادات مرنة للجودة لتفادي أخطاء Format not available
+            if is_mp3:
+                f_spec = 'bestaudio/best'
             else:
-                st.error("فشل التحميل: يرجى تحديث ملف cookies.txt في GitHub")
-        except Exception as e:
-            st.error(f"حدث خطأ: {str(e)[:100]}")
+                f_spec = f'bestvideo[height<={q_num}][ext=mp4]+bestaudio[ext=m4a]/best[height<={q_num}]/best' if q_num != "أفضل جودة" else 'bestvideo+bestaudio/best'
 
-st.markdown('<div style="color: #666; text-align: center; margin-top: 50px;"> ❤️شكرا لاستخدامك موقعنا , نتمنى لك يوما سعيدا </div>', unsafe_allow_html=True)
+            ydl_opts = {
+                'format': f_spec,
+                'outtmpl': temp_out_path,
+                'progress_hooks': [progress_hook],
+                'nocheckcertificate': True,
+                'quiet': True
+            }
+            if is_mp3:
+                ydl_opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': '192'}]
 
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    ydl.download([url_input])
+                
+                # تحديد مسار Downloads الخاص بالمستخدم
+                user_downloads = os.path.join(os.path.expanduser("~"), "Downloads")
+                final_filename = f"{safe_title}.{ext}"
+                final_path = os.path.join(user_downloads, final_filename)
+
+                # البحث عن الملف الفعلي الذي تم تحميله في المجلد المؤقت
+                downloaded_file = None
+                for f in os.listdir(temp_dir):
+                    if f.startswith(unique_name):
+                        downloaded_file = os.path.join(temp_dir, f)
+                        break
+
+                if downloaded_file:
+                    shutil.move(downloaded_file, final_path) # النقل التلقائي
+                    
+                    # إضافة للسجل
+                    st.session_state.history.append({"title": safe_title, "time": time.strftime("%H:%M:%S"), "ext": ext})
+                    st.success(f"✅ تم الحفظ تلقائياً في مجلد Downloads باسم: {final_filename}")
+                else:
+                    st.error("❌ تعذر العثور على الملف بعد تحميله.")
+            except Exception as e:
+                st.error(f"❌ خطأ أثناء التحميل: {e}")
+
+with side_col:
+    st.markdown("### 📜 السجل (History)")
+    if not st.session_state.history:
+        st.write("لا يوجد عمليات تحميل سابقة")
+    else:
+        if st.button("🗑️ مسح السجل"):
+            st.session_state.history = []
+            st.rerun()
+        for item in reversed(st.session_state.history):
+            st.markdown(f'<div class="history-card"><small style="color:#00c6ff;">{item["time"]}</small><br><b>{item["title"][:30]}...</b><br><small>Type: {item["ext"].upper()}</small></div>', unsafe_allow_html=True)
+
+st.markdown("<br><center style='color:#444;'>El_kasrawy Downloader Pro © 2025</center>", unsafe_allow_html=True)
