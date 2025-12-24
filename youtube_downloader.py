@@ -67,7 +67,8 @@ if search_btn and url_input:
     except Exception as e:
         st.error(f"❌ خطأ: تأكد من رفع ملف cookies.txt | {e}")
 
-main_col, side_col = st.columns([2, 1])
+# --- تم تعديل العرض هنا ليكون كامل العرض ---
+main_col = st.container()
 
 with main_col:
     st.markdown("### 📥 إعدادات التحميل")
@@ -115,7 +116,7 @@ with main_col:
                     ydl.download([url_input])
                 
                 if os.path.exists(out_file):
-                    # --- التعديل هنا: إضافة الفيديو للسجل عند النجاح ---
+                    # إضافة الفيديو للسجل عند النجاح
                     st.session_state.history.append({"title": st.session_state.video_data['title']})
                     
                     status_text.text("✅ تمت المعالجة! اضغط على الزر الأزرق")
@@ -130,8 +131,13 @@ with main_col:
             except Exception as e:
                 st.error(f"❌ خطأ: {e}")
 
-with side_col:
+# --- التعديل السحري هنا: السجل في القائمة الجانبية (Sidebar) ---
+with st.sidebar:
     st.markdown("### 📜 السجل")
+    if st.button("🗑️ مسح السجل"):
+        st.session_state.history = []
+        st.rerun()
+    
     for item in reversed(st.session_state.history):
         st.markdown(f'<div class="history-card"><b>{item["title"][:30]}</b></div>', unsafe_allow_html=True)
 
