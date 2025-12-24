@@ -20,6 +20,7 @@ st.markdown("""
     }
     div.stButton > button:hover { background-color: #00c6ff; color: white; }
     
+    /* تنسيق زر التحميل النهائي ليكون أزرق وواضح */
     div.stDownloadButton > button {
         background-color: #00c6ff !important; 
         color: white !important; 
@@ -41,18 +42,17 @@ st.markdown('<div class="glow-title">YouTube Downloader 🎬</div>', unsafe_allo
 
 col_input, col_search = st.columns([4, 1])
 with col_input:
-    # حل مشكلة الليبل الفارغ
-    url_input = st.text_input("رابط الفيديو", placeholder="ضع رابط الفيديو هنا...", key="url_bar", label_visibility="collapsed")
+    url_input = st.text_input("YouTube URL", placeholder="ضع رابط الفيديو هنا...", key="url_bar", label_visibility="collapsed")
 with col_search:
     search_btn = st.button("🔍 بحث")
 
 if search_btn and url_input:
     try:
         with st.spinner("🔄 جاري فحص الجودات..."):
+            # إعدادات لتجنب حظر 403
             ydl_opts = {
                 'quiet': True, 
                 'nocheckcertificate': True,
-                # حل مشكلة الـ 403 وحماية يوتيوب الجديدة
                 'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -65,7 +65,7 @@ if search_btn and url_input:
                     'qs': [f"{h}p" for h in heights] if heights else ["أفضل جودة"]
                 }
     except Exception as e:
-        st.error(f"❌ خطأ: {e}")
+        st.error(f"❌ خطأ في فحص الرابط: {e}")
 
 main_col, side_col = st.columns([2, 1])
 
@@ -73,7 +73,7 @@ with main_col:
     st.markdown("### 📥 إعدادات التحميل")
     col_m1, col_m2 = st.columns([1, 1.2])
     with col_m1:
-        # استبدال use_container_width بـ width='stretch'
+        # تحديث التحذير الخاص بـ use_container_width
         st.image(st.session_state.video_data['thumb'], width='stretch')
     with col_m2:
         st.write(f"**{st.session_state.video_data['title']}**")
@@ -100,13 +100,16 @@ with main_col:
             out_file = f"{unique_id}.{ext}"
             q_num = quality_choice.replace("p", "")
             
+            # إعدادات مكثفة لتخطي حماية يوتيوب 403
             ydl_opts = {
                 'format': f'bestvideo[height<={q_num}]+bestaudio/best' if not is_mp3 else 'bestaudio/best',
                 'outtmpl': out_file,
                 'merge_output_format': 'mp4' if not is_mp3 else None,
                 'progress_hooks': [progress_hook],
                 'nocheckcertificate': True,
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'referer': 'https://www.google.com/',
+                'http_chunk_size': 1048576,
             }
             if is_mp3:
                 ydl_opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': '192'}]
@@ -116,15 +119,17 @@ with main_col:
                     ydl.download([url_input])
                 
                 if os.path.exists(out_file):
-                    status_text.text("✅ جاهز للتحميل")
+                    status_text.text("✅ تمت المعالجة بنجاح")
                     with open(out_file, "rb") as f:
                         st.download_button(
-                            label="📥 حفظ الملف الآن",
+                            label="📥 اضغط هنا لحفظ الملف الآن",
                             data=f,
                             file_name=f"{safe_title}.{ext}",
                             mime="video/mp4" if not is_mp3 else "audio/mpeg"
                         )
-                    st.session_state.history.append({"title": safe_title, "time": time.strftime("%H:%M:%S"), "ext": ext})
+                    st.session_state.history.append({"title": safe_title, "time": time.strftime("%H:%M:%S")})
+                else:
+                    st.error("❌ فشل تحميل الملف.")
             except Exception as e:
                 st.error(f"❌ خطأ: {e}")
 
@@ -132,5 +137,3 @@ with side_col:
     st.markdown("### 📜 السجل (History)")
     for item in reversed(st.session_state.history):
         st.markdown(f'<div class="history-card"><small>{item["time"]}</small><br><b>{item["title"][:30]}...</b></div>', unsafe_allow_html=True)
-
-st.markdown("<br><center>El_kasrawy Downloader Pro 2025</center>", unsafe_allow_html=True)
