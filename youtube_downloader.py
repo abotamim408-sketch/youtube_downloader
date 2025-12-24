@@ -104,7 +104,6 @@ with main_col:
                 'merge_output_format': 'mp4' if not is_mp3 else None,
                 'progress_hooks': [progress_hook],
                 'nocheckcertificate': True,
-                # استخدام الكوكيز هنا أيضاً
                 'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
                 'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
             }
@@ -116,6 +115,9 @@ with main_col:
                     ydl.download([url_input])
                 
                 if os.path.exists(out_file):
+                    # --- التعديل هنا: إضافة الفيديو للسجل عند النجاح ---
+                    st.session_state.history.append({"title": st.session_state.video_data['title']})
+                    
                     status_text.text("✅ تمت المعالجة! اضغط على الزر الأزرق")
                     with open(out_file, "rb") as f:
                         st.download_button(
