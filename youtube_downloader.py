@@ -100,7 +100,7 @@ with main_col:
             q_num = quality_choice.replace("p", "")
             
             ydl_opts = {
-                'format': f'bestvideo[height<={q_num}][ext=mp4]+bestaudio[ext=m4a]/best[height<={q_num}]/best',
+                'format': f'bestvideo[height<={q_num}]+bestaudio/best[height<={q_num}]/best',
                 'outtmpl': out_file,
                 'merge_output_format': 'mp4' if not is_mp3 else None,
                 'progress_hooks': [progress_hook],
@@ -151,5 +151,6 @@ with st.sidebar:
         st.markdown(f'<div class="history-card"><b>{item["title"][:30]}</b></div>', unsafe_allow_html=True)
 
 st.markdown("<br><center>El_kasrawy Pro 2025</center>", unsafe_allow_html=True)
+
 
 
