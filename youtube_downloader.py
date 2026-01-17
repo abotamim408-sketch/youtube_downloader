@@ -106,13 +106,15 @@ with main_col:
                 'progress_hooks': [progress_hook],
                 'nocheckcertificate': True,
                 'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
-                'user_agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36',
+                # امسح سطر الـ user_agent القديم و استبدل الـ extractor_args بالتالي:
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['ios', 'web_embedded'],
+                    }
+                },
                 'http_headers': {
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-us,en;q=0.5',
-                    'Sec-Fetch-Mode': 'navigate',
-                    },
-                'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+                    'Referer': 'https://www.google.com/',
+                },
                 'quiet': True
             }
             if is_mp3:
@@ -149,3 +151,4 @@ with st.sidebar:
         st.markdown(f'<div class="history-card"><b>{item["title"][:30]}</b></div>', unsafe_allow_html=True)
 
 st.markdown("<br><center>El_kasrawy Pro 2025</center>", unsafe_allow_html=True)
+
