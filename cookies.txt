@@ -1,25 +1,162 @@
-# Netscape HTTP Cookie File
-# https://curl.haxx.se/rfc/cookie_spec.html
-# This is a generated file! Do not edit.
+import streamlit as st
+import yt_dlp
+import os
+import time
+import uuid
+import re
 
-.youtube.com	TRUE	/	TRUE	1803050543	LOGIN_INFO	AFmmF2swRQIgLbSP2VqY-attwssVDkxQDnW9B7i1JSLdCzTRqg3D6_QCIQCsE1Ok0qTJoRlaYSWCnHlCyyuYf-rfx4q6fNypOEkFyA:QUQ3MjNmemo2ODJwRlE4cUdNdEVTLW1KQ05wbzY4akxKaW1iOXVDLTNhVUFkNU1vQ3dsaV9yZHJoS2Y1ZVRRcndldUlWZ3ZnamxLcVRONmdQdXU5WC1vNDdkQV8wUGpnNENvU19QTlJXV0ROcDUxVEUxYnFmdGdGWjFZMlJOcE9Ja2kxQkh2V1lHZlBSMUF3VzFMWnR1X3BORlhGcThmbnBB
-.youtube.com	TRUE	/	TRUE	1803196852	PREF	tz=Africa.Cairo&f7=100
-.youtube.com	TRUE	/	FALSE	1803054936	HSID	Ad4dVVWaREl06L0Gl
-.youtube.com	TRUE	/	TRUE	1803054936	SSID	AQ4gOMCQDZqVMuOXY
-.youtube.com	TRUE	/	FALSE	1803054936	APISID	xz5BwQC394hqOQxa/AdrVdnaUVE0Zw_-Qc
-.youtube.com	TRUE	/	TRUE	1803054936	SAPISID	ukizwHwutvIwHM9v/AvL_-tsFZZGHQdJP1
-.youtube.com	TRUE	/	TRUE	1803054936	__Secure-1PAPISID	ukizwHwutvIwHM9v/AvL_-tsFZZGHQdJP1
-.youtube.com	TRUE	/	TRUE	1803054936	__Secure-3PAPISID	ukizwHwutvIwHM9v/AvL_-tsFZZGHQdJP1
-.youtube.com	TRUE	/	FALSE	1803054936	SID	g.a0005wj0UdrZqMbrKWvannk-aQTmkBOPEC0g61Vlt5s4f41fBpoykCMXN-xujO0c0ddVzQgWXwACgYKAboSARYSFQHGX2MiuNOnVtrCSsH5TvdjALAb7xoVAUF8yKohGr9klPyIgqhPd1wvVIcu0076
-.youtube.com	TRUE	/	TRUE	1803054936	__Secure-1PSID	g.a0005wj0UdrZqMbrKWvannk-aQTmkBOPEC0g61Vlt5s4f41fBpoyHxMnCpMd0FZpRcNZHH01mAACgYKAX8SARYSFQHGX2MimeifGOEKZ4AQVZaCAxvmRRoVAUF8yKpO6dMjYwfiZzIG2UtpIF1q0076
-.youtube.com	TRUE	/	TRUE	1803054936	__Secure-3PSID	g.a0005wj0UdrZqMbrKWvannk-aQTmkBOPEC0g61Vlt5s4f41fBpoyEffr4nY_z9xFnBBRy8dfdAACgYKAXoSARYSFQHGX2Mi_Sn-YGhZlLUiCketHGLweBoVAUF8yKqfmCCtJg8IuXi9twKPyJmV0076
-.youtube.com	TRUE	/	TRUE	1800183973	__Secure-1PSIDTS	sidts-CjQB7I_69ILtPinEiFR4Hf-dmjseizVzVscvYsRwVhCEYHp7dJUjNIvtsUggChHMu0lUNCqIEAA
-.youtube.com	TRUE	/	TRUE	1800183973	__Secure-3PSIDTS	sidts-CjQB7I_69ILtPinEiFR4Hf-dmjseizVzVscvYsRwVhCEYHp7dJUjNIvtsUggChHMu0lUNCqIEAA
-.youtube.com	TRUE	/	FALSE	1800184064	SIDCC	AKEyXzWCAO-mUkYcwD61FO6hYOTAoLYGa2jTN3oj78oRPp28MLHBTvbxBuvdl0E_XqSYw-pSAjM
-.youtube.com	TRUE	/	TRUE	1800184064	__Secure-1PSIDCC	AKEyXzUV3daOajSTPY0PCEJ6uDeugUCOe73CSwW-04TGto8AC7iS0NJEBJC5wb4XvF629QsWz4U
-.youtube.com	TRUE	/	TRUE	1800184064	__Secure-3PSIDCC	AKEyXzWHh5lyeuCR9NYxTvf2YmbjkCySX-pcnO1Jk384J0inCUzM4obf0w-tMN6RweEobRwjmw
-.youtube.com	TRUE	/	TRUE	1784188849	VISITOR_INFO1_LIVE	2d89q9coMqk
-.youtube.com	TRUE	/	TRUE	1784188849	VISITOR_PRIVACY_METADATA	CgJFRxIEGgAgLg%3D%3D
-.youtube.com	TRUE	/	TRUE	1784188541	__Secure-YNID	15.YT=fTOw99wrDRLQlEz2GsJVQCz5rohitYltOoa_gR2XjbtlUd8WVtuBfbeBNVCrYfSZ88MlNgnypnlF9fEZWMDcUeGkKaRbfbVWIGm6Cuox5fWWb9K6Xn0OyAqsUmZGnMrk5FSEcMNx-UQ-WBYgzofcSjNl_Y59GEvn4FqblnDrsgYKLveXCAqwozx9pj-xG3rPGiCyrvDQFI0rJAE9QuyS-G2qcFm1sdCKxTWUq_cKXH18OFpoZUm_Sz9TSnk49L9Z4fp3-WTW76FqkFgUYNX5WJ7UJSKfjmWwKYdfaSE6w2hEbZBmyZU5nMYPHFEKDKb0zifjAcUbOV_1-e_Y-8Mirg
-.youtube.com	TRUE	/	TRUE	0	YSC	RYLHpTFbOoQ
-.youtube.com	TRUE	/	TRUE	1784188541	__Secure-ROLLOUT_TOKEN	CJS_7Z2TkYzGvgEQ9ZvUt4iOkgMY4J-CxoySkgM%3D
+# --- الإعدادات والواجهة ---
+st.set_page_config(page_title="YouTube Downloader", layout="wide")
+
+st.markdown("""
+    <style>
+    .stApp { background-color: #0b0e14; color: white; }
+    .logo-text { color: #00c6ff; font-size: 22px; font-weight: bold; }
+    .glow-title { font-size: 40px; font-weight: 900; color: #FFFFFF; text-align: center; }
+    
+    div.stButton > button {
+        background-color: transparent; color: #00c6ff; border: 2px solid #00c6ff;
+        border-radius: 10px; font-weight: bold; width: 100%; height: 3.5em;
+    }
+    div.stButton > button:hover { background-color: #00c6ff; color: white; }
+    
+    div.stDownloadButton > button {
+        background-color: #00c6ff !important; 
+        color: white !important; 
+        border: none !important;
+        border-radius: 10px; font-weight: bold; width: 100%; height: 3.5em;
+        font-size: 18px;
+    }
+    
+    .history-card { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 5px; border-right: 4px solid #00c6ff; }
+    </style>
+    """, unsafe_allow_html=True)
+
+if 'history' not in st.session_state: st.session_state.history = []
+if 'video_data' not in st.session_state:
+    st.session_state.video_data = {'title': "ابحث عن فيديو", 'thumb': "https://via.placeholder.com/400x225/111/333", 'qs': ["أفضل جودة"]}
+
+st.markdown('<div class="logo-text">🌐 El_kasrawy </div>', unsafe_allow_html=True)
+st.markdown('<div class="glow-title">YouTube Downloader 🎬</div>', unsafe_allow_html=True)
+
+col_input, col_search = st.columns([4, 1])
+with col_input:
+    url_input = st.text_input("YouTube URL", placeholder="ضع رابط الفيديو هنا...", key="url_bar", label_visibility="collapsed")
+with col_search:
+    search_btn = st.button("🔍 بحث")
+
+# --- محرك البحث باستخدام الكوكيز ---
+if search_btn and url_input:
+    try:
+        with st.spinner("🔄 جاري فحص الجودات بالهوية الجديدة..."):
+            ydl_opts = {
+                'quiet': True, 
+                'nocheckcertificate': True,
+                'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
+                'extractor_args': {'youtube': {'player_client': ['ios', 'web_embedded']}}
+            }
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url_input, download=False)
+                formats = info.get('formats', [])
+                heights = sorted(list(set(f['height'] for f in formats if f.get('height'))), reverse=True)
+                st.session_state.video_data = {
+                    'title': info.get('title', 'Video'),
+                    'thumb': info.get('thumbnail'),
+                    'qs': [f"{h}p" for h in heights] if heights else ["أفضل جودة"]
+                }
+    except Exception as e:
+        st.error(f"❌ خطأ: تأكد من رفع ملف cookies.txt | {e}")
+
+main_col = st.container()
+
+with main_col:
+    st.markdown("### 📥 إعدادات التحميل")
+    col_m1, col_m2 = st.columns([1, 1.2])
+    with col_m1:
+        st.image(st.session_state.video_data['thumb'], use_container_width=True)
+    with col_m2:
+        st.write(f"**{st.session_state.video_data['title']}**")
+        format_choice = st.selectbox("النوع:", ["فيديو (MP4)", "صوت (MP3)"])
+        quality_choice = st.selectbox("الجودة:", st.session_state.video_data['qs'])
+
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+
+    def progress_hook(d):
+        if d['status'] == 'downloading':
+            p = d.get('_percent_str', '0%').replace('%','')
+            try:
+                progress_bar.progress(float(p)/100)
+                status_text.text(f"🚀 جاري التحميل: {d.get('_percent_str')}")
+            except: pass
+
+    if st.button("🚀 ابدأ التحميل"):
+        if url_input:
+            is_mp3 = "صوت" in format_choice
+            ext = "mp3" if is_mp3 else "mp4"
+            unique_id = uuid.uuid4().hex
+            out_file = f"{unique_id}.{ext}"
+            
+            # --- تعديل الجزء المسبب للمشكلة (تم إصلاح منطق الجودة والصيغة) ---
+            q_val = re.sub(r'\D', '', quality_choice) 
+            
+            if is_mp3:
+                f_str = 'bestaudio/best'
+            else:
+                # شيلنا القيود الصارمة بتاعة ext=mp4 عشان ميدي كش خطأ
+                if q_val:
+                    f_str = f'bestvideo[height<={q_val}]+bestaudio/best[height<={q_val}]/best'
+                else:
+                    f_str = 'bestvideo+bestaudio/best'
+
+            ydl_opts = {
+                'format': f_str,
+                'outtmpl': out_file,
+                # السطر ده هو اللي هيخلي الفيديو النهائي mp4 مهما كان أصله
+                'merge_output_format': 'mp4' if not is_mp3 else None,
+                'progress_hooks': [progress_hook],
+                'nocheckcertificate': True,
+                'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
+                'extractor_args': {
+                    'youtube': {
+                        'player_client': ['ios', 'web_embedded'],
+                    }
+                },
+                'http_headers': {
+                    'Referer': 'https://www.google.com/',
+                },
+                'quiet': True
+            }
+            # --- نهاية التعديل المصلح ---
+
+            if is_mp3:
+                ydl_opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': '192'}]
+
+            try:
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    ydl.download([url_input])
+                
+                if os.path.exists(out_file):
+                    st.session_state.history.append({"title": st.session_state.video_data['title']})
+                    status_text.text("✅ تمت المعالجة! اضغط على الزر الأزرق")
+                    with open(out_file, "rb") as f:
+                        st.download_button(
+                            label="📥 حفظ الملف الآن",
+                            data=f,
+                            file_name=f"{st.session_state.video_data['title']}.{ext}",
+                            mime="video/mp4" if not is_mp3 else "audio/mpeg"
+                        )
+                else: st.error("❌ فشل التحميل")
+            except Exception as e:
+                st.error(f"❌ خطأ: {e}")
+
+with st.sidebar:
+    st.markdown("### 📜 السجل")
+    if st.button("🗑️ مسح السجل"):
+        st.session_state.history = []
+        st.rerun()
+    
+    for item in reversed(st.session_state.history):
+        st.markdown(f'<div class="history-card"><b>{item["title"][:30]}</b></div>', unsafe_allow_html=True)
+
+st.markdown("<br><center>El_kasrawy Pro 2026</center>", unsafe_allow_html=True)
