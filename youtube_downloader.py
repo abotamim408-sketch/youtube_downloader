@@ -53,7 +53,8 @@ if search_btn and url_input:
                 'quiet': True, 
                 'nocheckcertificate': True,
                 'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                # تم إضافة التعديل هنا أيضاً لضمان جلب البيانات
+                'extractor_args': {'youtube': {'player_client': ['ios', 'web_embedded']}}
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url_input, download=False)
@@ -67,7 +68,6 @@ if search_btn and url_input:
     except Exception as e:
         st.error(f"❌ خطأ: تأكد من رفع ملف cookies.txt | {e}")
 
-# --- تم تعديل العرض هنا ليكون كامل العرض ---
 main_col = st.container()
 
 with main_col:
@@ -97,11 +97,22 @@ with main_col:
             ext = "mp3" if is_mp3 else "mp4"
             unique_id = uuid.uuid4().hex
             out_file = f"{unique_id}.{ext}"
-            q_num = quality_choice.replace("p", "")
             
-            # --- التعديل هنا فقط ---
+            # --- هذا هو الجزء الذي قمتُ بتعديله "أنا" ليكون شاملاً ومرناً ---
+            q_val = re.sub(r'\D', '', quality_choice) # استخراج الرقم فقط من الاختيار
+            
+            if is_mp3:
+                # إعدادات الصوت
+                f_str = 'bestaudio/best'
+            else:
+                # إعدادات الفيديو: إذا وجد رقم جودة يستخدمه، وإلا يحمل أفضل المتاح
+                if q_val:
+                    f_str = f'bestvideo[height<={q_val}]+bestaudio/best[height<={q_val}]/best'
+                else:
+                    f_str = 'bestvideo+bestaudio/best'
+
             ydl_opts = {
-                'format': f'bestvideo[height<={q_num}]+bestaudio/best[height<={q_num}]/best' if q_num.isdigit() else 'bestvideo+bestaudio/best',
+                'format': f_str,
                 'outtmpl': out_file,
                 'merge_output_format': 'mp4' if not is_mp3 else None,
                 'progress_hooks': [progress_hook],
@@ -117,7 +128,7 @@ with main_col:
                 },
                 'quiet': True
             }
-            # --- نهاية التعديل ---
+            # --- نهاية تعديلي ---
 
             if is_mp3:
                 ydl_opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': '192'}]
@@ -127,22 +138,19 @@ with main_col:
                     ydl.download([url_input])
                 
                 if os.path.exists(out_file):
-                    # إضافة الفيديو للسجل عند النجاح
                     st.session_state.history.append({"title": st.session_state.video_data['title']})
-                    
                     status_text.text("✅ تمت المعالجة! اضغط على الزر الأزرق")
                     with open(out_file, "rb") as f:
                         st.download_button(
                             label="📥 حفظ الملف الآن",
                             data=f,
-                            file_name=f"video_{unique_id}.{ext}",
+                            file_name=f"{st.session_state.video_data['title']}.{ext}",
                             mime="video/mp4" if not is_mp3 else "audio/mpeg"
                         )
                 else: st.error("❌ فشل التحميل")
             except Exception as e:
                 st.error(f"❌ خطأ: {e}")
 
-# --- التعديل السحري هنا: السجل في القائمة الجانبية (Sidebar) ---
 with st.sidebar:
     st.markdown("### 📜 السجل")
     if st.button("🗑️ مسح السجل"):
