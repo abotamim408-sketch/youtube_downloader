@@ -74,7 +74,7 @@ with main_col:
     st.markdown("### 📥 إعدادات التحميل")
     col_m1, col_m2 = st.columns([1, 1.2])
     with col_m1:
-        st.image(st.session_state.video_data['thumb'], width='stretch')
+        st.image(st.session_state.video_data['thumb'], use_container_width=True)
     with col_m2:
         st.write(f"**{st.session_state.video_data['title']}**")
         format_choice = st.selectbox("النوع:", ["فيديو (MP4)", "صوت (MP3)"])
@@ -99,14 +99,14 @@ with main_col:
             out_file = f"{unique_id}.{ext}"
             q_num = quality_choice.replace("p", "")
             
+            # --- التعديل هنا فقط ---
             ydl_opts = {
-                'format': f'bestvideo[height<={q_num}]+bestaudio/best[height<={q_num}]/best',
+                'format': f'bestvideo[height<={q_num}]+bestaudio/best[height<={q_num}]/best' if q_num.isdigit() else 'bestvideo+bestaudio/best',
                 'outtmpl': out_file,
                 'merge_output_format': 'mp4' if not is_mp3 else None,
                 'progress_hooks': [progress_hook],
                 'nocheckcertificate': True,
                 'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
-                # امسح سطر الـ user_agent القديم و استبدل الـ extractor_args بالتالي:
                 'extractor_args': {
                     'youtube': {
                         'player_client': ['ios', 'web_embedded'],
@@ -117,6 +117,8 @@ with main_col:
                 },
                 'quiet': True
             }
+            # --- نهاية التعديل ---
+
             if is_mp3:
                 ydl_opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': '192'}]
 
@@ -150,7 +152,4 @@ with st.sidebar:
     for item in reversed(st.session_state.history):
         st.markdown(f'<div class="history-card"><b>{item["title"][:30]}</b></div>', unsafe_allow_html=True)
 
-st.markdown("<br><center>El_kasrawy Pro 2025</center>", unsafe_allow_html=True)
-
-
-
+st.markdown("<br><center>El_kasrawy Pro 2026</center>", unsafe_allow_html=True)
