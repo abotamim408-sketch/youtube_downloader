@@ -106,12 +106,14 @@ with main_col:
                 'progress_hooks': [progress_hook],
                 'nocheckcertificate': True,
                 'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
-                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'user_agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36',
                 'http_headers': {
                     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
                     'Accept-Language': 'en-us,en;q=0.5',
                     'Sec-Fetch-Mode': 'navigate',
-                    }
+                    },
+                'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
+                'quiet': True
             }
             if is_mp3:
                 ydl_opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': '192'}]
