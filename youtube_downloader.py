@@ -101,24 +101,13 @@ with main_col:
             
             ydl_opts = {
                 # التعديل ده بيضمن دمج الصوت والصورة لأي جودة (بيحتاج ffmpeg في ملف packages.txt)
-                'format': f'bestvideo[ext=mp4][height<={q_num}]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+                'format': f'bestvideo[height<={q_num}][ext=mp4]+bestaudio[ext=m4a]/best[height<={q_num}]/best',
                 'outtmpl': out_file,
-                'merge_output_format': 'mp4' if not is_mp3 else None,
-                'progress_hooks': [progress_hook],
-                'nocheckcertificate': True,
-                #تسجيل الهوية لتخطي الحظر
-                'username': 'oauth2',
+                'merge_output_format': 'mp4',
+                'username': 'oauth2', # تفعيل الدخول بالكود
                 'password': '',
-                # --- إعدادات إضافية لزيادة الموثوقية ---
-                # 'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
-                'user_agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36',
-                'http_headers': {
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-                    'Accept-Language': 'en-us,en;q=0.5',
-                    'Sec-Fetch-Mode': 'navigate',
-                    },
-                'extractor_args': {'youtube': {'player_client': ['android', 'web']}},
-                'quiet': True
+                'nocheckcertificate': True,
+                'quiet': False, # مهمة جداً عشان الكود يظهر في الـ Logs
             }
             if is_mp3:
                 ydl_opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': '192'}]
@@ -154,4 +143,3 @@ with st.sidebar:
         st.markdown(f'<div class="history-card"><b>{item["title"][:30]}</b></div>', unsafe_allow_html=True)
 
 st.markdown("<br><center>El_kasrawy Pro 2025</center>", unsafe_allow_html=True)
-
