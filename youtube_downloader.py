@@ -145,3 +145,4 @@ with st.sidebar:
         st.markdown(f'<div class="history-card"><b>{item["title"][:30]}</b></div>', unsafe_allow_html=True)
 
 st.markdown("<br><center>El_kasrawy Pro 2025</center>", unsafe_allow_html=True)
+
