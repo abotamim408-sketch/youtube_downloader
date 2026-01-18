@@ -104,10 +104,12 @@ with main_col:
                 'format': f'bestvideo[height<={q_num}][ext=mp4]+bestaudio[ext=m4a]/best[height<={q_num}]/best',
                 'outtmpl': out_file,
                 'merge_output_format': 'mp4',
-                'username': 'oauth2', # تفعيل الدخول بالكود
-                'password': '',
                 'nocheckcertificate': True,
-                'quiet': False, # مهمة جداً عشان الكود يظهر في الـ Logs
+                # استخدام ملف الكوكيز الجديد (Netscape)
+                'cookiefile': 'cookies.txt' if os.path.exists('cookies.txt') else None,
+                # تعريف المتصفح لتجنب كشف السيرفر
+                'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'extractor_args': {'youtube': {'player_client': ['web', 'ios']}},
             }
             if is_mp3:
                 ydl_opts['postprocessors'] = [{'key': 'FFmpegExtractAudio','preferredcodec': 'mp3','preferredquality': '192'}]
