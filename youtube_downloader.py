@@ -101,7 +101,7 @@ with main_col:
             
             ydl_opts = {
                 # التعديل ده بيضمن دمج الصوت والصورة لأي جودة (بيحتاج ffmpeg في ملف packages.txt)
-                'format': f'bestvideo[height<={q_num}][ext=mp4]+bestaudio[ext=m4a]/best[height<={q_num}]/best',
+                'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
                 'outtmpl': out_file,
                 'merge_output_format': 'mp4',
                 'nocheckcertificate': True,
@@ -145,4 +145,5 @@ with st.sidebar:
         st.markdown(f'<div class="history-card"><b>{item["title"][:30]}</b></div>', unsafe_allow_html=True)
 
 st.markdown("<br><center>El_kasrawy Pro 2025</center>", unsafe_allow_html=True)
+
 
